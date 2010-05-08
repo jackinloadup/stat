@@ -3,6 +3,7 @@ name = Stats
 description = View your analytics data in one place.
 core = 6.x
 package = Statistics
+project status url = http://features.robisoncreative.com/fserver
 
 dependencies[] = flot
 dependencies[] = jquery_ui
