@@ -2,6 +2,7 @@
 name = Stats
 description = View your analytics data in one place.
 core = 6.x
+version = 6.x-1.0-unstable2
 package = Statistics
 project status url = http://features.robisoncreative.com/fserver
 
