@@ -1,0 +1,27 @@
+/* @override http://testing.robisoncreative.com/sites/all/modules/stat/stat.css?L */
+
+#flot-auto-identifier-1 {
+	position: relative;
+}
+
+#flot-auto-identifier-1 table {
+	width: auto;
+}
+
+#flot-auto-identifier-1 .tickLabels {
+}
+
+#stat-report {
+	position: relative;
+}
+
+#stat-filters {
+	margin-right: 160px;
+}
+
+#stat-date {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 150px;
+}

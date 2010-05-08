@@ -1,0 +1,7 @@
+; $Id$
+name = Stat Google Analytics
+description = View your Google Analytics data in stat.
+core = 6.x
+package = Statistics
+
+dependencies[] = stat

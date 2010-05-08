@@ -1,0 +1,8 @@
+; $Id$
+name = Stat Simplenews
+description = View your Simplenews data in stat.
+core = 6.x
+package = Statistics
+
+dependencies[] = stat
+dependencies[] = simplenews_statistics

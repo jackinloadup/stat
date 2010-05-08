@@ -1,0 +1,54 @@
+<?php
+function stat_simplenews_stat_provider() {
+	$provider['stat_simplenews'] = array(
+			'#title' => t('Simplenews'),
+			'#description' => t('Statistics pulled from statistics captured by Simplenews Statistics'),
+			//'#categories' => TRUE,
+			//'#sub-categories' => TRUE,
+		);
+	
+	$provider['stat_simplenews']['items'] = array(
+		'visitors' => array(
+			'title' => t('Clicks'),
+			'description' => t('Total number of visitors to your site for the requested time period. When requesting this metric, you can only combine it with time dimensions such as ga:hour or ga:year.'),
+			'callback' => 'stat_simplenews_stat_clicks',
+			'dimensions' => 'time',
+		),
+		'opens' => array(
+			'title' => t('Opens'),
+			'description' => t('A visit consists of a single-user session, which times out automatically after 30 minutes unless the visitor continues activity on your site.'),
+			'callback' => 'stat_simplenews_stat_opens',
+			'dimensions' => 'time',
+		),
+	);
+	
+	return $provider;
+} // function stat_google_analytics_stat_provider()
+
+function stat_simplenews_stat_clicks($start_date,$end_date) {
+	$results = db_query("SELECT timestamp as t FROM simplenews_statistics_clicks");
+	while($timestamp = db_fetch_object($results)) {
+		$day = mktime(0, 0, 0, date('n',$timestamp->t), date('j',$timestamp->t), date('Y',$timestamp->t));
+		$timestamps[$day]++;
+	}
+	foreach($timestamps as $day=>$count) $time_points[] = array($day*1000,$count);
+	$points = new flotData($time_points);
+	$points->label = 'Newsletter Clicks';
+	return $points;
+}
+
+function stat_simplenews_stat_opens($start_date,$end_date) {
+	$results = db_query("SELECT timestamp as t FROM simplenews_statistics_opens");
+	while($timestamp = db_fetch_object($results)) {
+		$day = mktime(0, 0, 0, date('n',$timestamp->t), date('j',$timestamp->t), date('Y',$timestamp->t));
+		$timestamps[$day]++;
+	}
+	foreach($timestamps as $day=>$count) $time_points[] = array($day*1000,$count);
+	$points = new flotData($time_points);
+	$points->label = 'Newsletter Opens';
+	return $points;
+	// set the date range
+  //$stat_google_analytics_link->setDateRange(date('Y\-m\-d',$start_date),date('Y\-m\-d',$end_date));
+
+	//return get_stat_google_analytics_points($stat_google_analytics_link->getPageviews(), t('Page Views'));
+}

@@ -1,0 +1,8 @@
+; $Id$
+name = Stats
+description = View your analytics data in one place.
+core = 6.x
+package = Statistics
+
+dependencies[] = flot
+dependencies[] = jquery_ui
