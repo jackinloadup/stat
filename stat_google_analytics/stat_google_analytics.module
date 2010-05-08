@@ -6,15 +6,60 @@ function stat_google_analytics_menu() {
   $items = array();
 
   $items['admin/settings/stat/stat_google_analytics'] = array(
-    'title' => 'Google Analytics AHAH',
+    'title' => 'Google Analytics',
     'page callback' => 'stat_google_analytics_admin_ahaha',
     'page arguments' => array('stat_admin'),
     'access arguments' => array('administer stats settings'),
     'type' => MENU_CALLBACK,
    );
+	
+	if(variable_get('stat_google_analytics_name','') != '') {
+		$items['admin/settings/stat/google_analytics_account'] = array(
+	    'title' => 'Google Account Login',
+	    'page callback' => 'drupal_get_form',
+	    'page arguments' => array('stat_google_analytics_admin'),
+	    'access arguments' => array('administer stats settings'),
+	    'type' => MENU_LOCAL_TASK,
+	   );
+	}
 
   return $items;
 } // function stat_menu()
+
+function stat_google_analytics_admin() {
+  $form = array();
+
+	$form['google_analytics']['stat_google_analytics_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Name'),
+    '#default_value' => variable_get('stat_google_analytics_name',''),
+    '#size' => 15,
+    '#maxlength' => 64,
+    '#required' => TRUE,
+  );
+  $form['google_analytics']['stat_google_analytics_password'] = array(
+    '#type' => 'password',
+    '#title' => t('Password'),
+    '#default_value' => variable_get('stat_google_analytics_password',''),
+    '#size' => 15,
+    '#maxlength' => 64,
+    '#required' => TRUE,
+  );
+
+	$form['google_analytics']['login'] = array(
+		'#type' => 'submit',
+		'#value' => t('Login'),
+		'#ahah' => array(
+	  	'path' => 'admin/settings/stat/stat_google_analytics',
+	    'wrapper' => 'stat_google_analytics',
+	    'method' => 'replace',
+	    'effect' => 'fade',
+			'event' => 'click',
+	  ),
+	);
+
+  return system_settings_form($form);
+} // function stat_admin()
 
 function stat_google_analytics_start() {
   global $_domain, $stat_google_analytics_link;
@@ -58,7 +103,8 @@ function stat_google_analytics_start() {
       // or $stat_google_analytics_link->setDateRange('YYYY-MM-DD', 'YYYY-MM-DD');
       $stat_google_analytics_link = $stat_google_analytics_link;
     } catch (Exception $e) {
-      drupal_set_message('Caught exception: ' . $e->getMessage(),'error'); 
+			$message_explode = explode(')',$e->getMessage());
+      drupal_set_message('Google Analytics API: ' . $message_explode[0].')','error'); 
     }
   }
   
@@ -74,67 +120,59 @@ function stat_google_analytics_form_alter(&$form, $form_state, $form_id) {
 
   switch ($form_id) {
     case 'stat_admin':
-	  $form['google_analytics'] = array(
-      '#type' => 'fieldset', 
-      '#title' => t('Google Analytics'),
-			'#attributes' => array('id'=>'stat_google_analytics'),
-    );
 
-		if(variable_get('stat_google_analytics_name','') == '' || variable_get('stat_google_analytics_password','') == '') {
-			$form['google_analytics']['stat_google_analytics_name'] = array(
-	      '#type' => 'textfield',
-	      '#title' => t('Name'),
-	      '#default_value' => variable_get('stat_google_analytics_name',''),
-	      '#size' => 15,
-	      '#maxlength' => 64,
-	      '#required' => TRUE,
-	    );
-	    $form['google_analytics']['stat_google_analytics_password'] = array(
-	      '#type' => 'password',
-	      '#title' => t('Password'),
-	      '#default_value' => variable_get('stat_google_analytics_password',''),
-	      '#size' => 15,
-	      '#maxlength' => 64,
-	      '#required' => TRUE,
+		  $form['google_analytics'] = array(
+	      '#type' => 'fieldset', 
+	      '#title' => t('Google Analytics'),
+				'#attributes' => array('id'=>'stat_google_analytics'),
+				'#attached' => array(
+			    'js' => array(
+	          'vertical-tabs' => drupal_get_path('module', 'stat_google_analytics') . '/js/stat_google_analytics_admin.js',
+	        ),
+	      ),
 	    );
 
-			$form['google_analytics']['login'] = array(
-				'#type' => 'submit',
-				'#value' => t('Login'),
-				'#ahah' => array(
-			  	'path' => 'admin/settings/stat/stat_google_analytics',
-			    'wrapper' => 'stat_google_analytics',
-			    'method' => 'replace',
-			    'effect' => 'fade',
-					'event' => 'click',
-			  ),
-			);
-		}
-		else {
 			stat_google_analytics_start();
-			$options = $stat_google_analytics_link->getProfileList();
-			asort($options);
-			$form['google_analytics']['stat_google_analytics_profile_id'] = array(
-		      '#type' => 'select',
-		      '#title' => t('Profile Name'),
-		      '#default_value' => variable_get('stat_google_analytics_profile_id',''),
-					'#options' => $options,
-		  );
-		/*
-			$form['google_analytics']['change_login'] = array(
-				'#type' => 'submit',
-				'#value' => t('Change Login'),
-				'#ahah' => array(
-			  	'path' => 'admin/settings/stat/stat_google_analytics',
-			    'wrapper' => 'stat_google_analytics',
-			    'method' => 'replace',
-			    'effect' => 'fade',
-					'event' => 'click',
-			  ),
-			);
-			*/
-		}
+			if($stat_google_analytics_link) {
+				$options = $stat_google_analytics_link->getProfileList();
+				asort($options);
+				$form['google_analytics']['stat_google_analytics_profile_id'] = array(
+			      '#type' => 'select',
+			      '#title' => t('Profile Name'),
+			      '#default_value' => variable_get('stat_google_analytics_profile_id',''),
+						'#options' => $options,
+			  );
+			}
+			else {
+				$form['google_analytics']['stat_google_analytics_name'] = array(
+		      '#type' => 'textfield',
+		      '#title' => t('Name'),
+		      '#default_value' => variable_get('stat_google_analytics_name',''),
+		      '#size' => 15,
+		      '#maxlength' => 64,
+		      '#required' => TRUE,
+		    );
+		    $form['google_analytics']['stat_google_analytics_password'] = array(
+		      '#type' => 'password',
+		      '#title' => t('Password'),
+		      '#default_value' => variable_get('stat_google_analytics_password',''),
+		      '#size' => 15,
+		      '#maxlength' => 64,
+		      '#required' => TRUE,
+		    );
 
+				$form['google_analytics']['login'] = array(
+					'#type' => 'submit',
+					'#value' => t('Login'),
+					'#ahah' => array(
+				  	'path' => 'admin/settings/stat/stat_google_analytics',
+				    'wrapper' => 'stat_google_analytics',
+				    'method' => 'replace',
+				    'effect' => 'fade',
+						'event' => 'click',
+				  ),
+				);
+			}
    	
     break;
   }

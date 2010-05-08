@@ -21,6 +21,15 @@ function stat_menu() {
     'type' => MENU_NORMAL_ITEM,
    );
 
+	$items['admin/settings/stat/overview'] = array(
+	  'title' => 'Overview',
+    'page callback' => 'drupal_get_form',
+	  'page arguments' => array('stat_admin'),
+	  'access arguments' => array('administer stats settings'),
+	  'type' => MENU_DEFAULT_LOCAL_TASK,
+		'weight' => -1,
+	 );
+
 	$items['admin/reports/stat'] = array(
     'title' => 'Analytic Statistics',
     'description' => 'Analytics Statistics for your website',
@@ -35,7 +44,7 @@ function stat_menu() {
 
 function stat_admin() {
   $form = array();
-
+	$form['#pre_render'][] = 'vertical_tabs_form_pre_render';
   return system_settings_form($form);
 } // function stat_admin()
 
