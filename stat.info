@@ -1,10 +1,9 @@
 ; $Id$
-name = Stats
-description = View your analytics data in one place.
+name = Stat
+description = Collect your analytics data in one place
 core = 6.x
-version = 6.x-1.0-unstable2
+version = 6.x-1.0-unstable3
 package = Statistics
 project status url = http://features.robisoncreative.com/fserver
 
-dependencies[] = flot
-dependencies[] = jquery_ui
+dependencies[] = ctools

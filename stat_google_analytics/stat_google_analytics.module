@@ -3,25 +3,25 @@
 
 function stat_google_analytics_menu() {
 
-  $items = array();
+ $items = array();
 
-  $items['admin/settings/stat/stat_google_analytics'] = array(
-    'title' => 'Google Analytics',
-    'page callback' => 'stat_google_analytics_admin_ahaha',
-    'page arguments' => array('stat_admin'),
-    'access arguments' => array('administer stats settings'),
-    'type' => MENU_CALLBACK,
-   );
-	
-	if(variable_get('stat_google_analytics_name','') != '') {
-		$items['admin/settings/stat/google_analytics_account'] = array(
-	    'title' => 'Google Account Login',
-	    'page callback' => 'drupal_get_form',
-	    'page arguments' => array('stat_google_analytics_admin'),
-	    'access arguments' => array('administer stats settings'),
-	    'type' => MENU_LOCAL_TASK,
-	   );
-	}
+ $items['admin/settings/stat/stat_google_analytics'] = array(
+   'title' => 'Google Analytics',
+   'page callback' => 'stat_google_analytics_admin_ahaha',
+   'page arguments' => array('stat_ui_admin'),
+   'access arguments' => array('administer stats settings'),
+   'type' => MENU_CALLBACK,
+  );
+
+  if(variable_get('stat_google_analytics_name','') != '') {
+    $items['admin/settings/stat/google_analytics_account'] = array(
+      'title' => 'Google Account Login',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('stat_google_analytics_admin'),
+      'access arguments' => array('administer stats settings'),
+      'type' => MENU_LOCAL_TASK,
+    );
+  }
 
   return $items;
 } // function stat_menu()
@@ -29,7 +29,7 @@ function stat_google_analytics_menu() {
 function stat_google_analytics_admin() {
   $form = array();
 
-	$form['google_analytics']['stat_google_analytics_name'] = array(
+        $form['google_analytics']['stat_google_analytics_name'] = array(
     '#type' => 'textfield',
     '#title' => t('Name'),
     '#default_value' => variable_get('stat_google_analytics_name',''),
@@ -46,17 +46,17 @@ function stat_google_analytics_admin() {
     '#required' => TRUE,
   );
 
-	$form['google_analytics']['login'] = array(
-		'#type' => 'submit',
-		'#value' => t('Login'),
-		'#ahah' => array(
-	  	'path' => 'admin/settings/stat/stat_google_analytics',
-	    'wrapper' => 'stat_google_analytics',
-	    'method' => 'replace',
-	    'effect' => 'fade',
-			'event' => 'click',
-	  ),
-	);
+        $form['google_analytics']['login'] = array(
+                '#type' => 'submit',
+                '#value' => t('Login'),
+                '#ahah' => array(
+                'path' => 'admin/settings/stat/stat_google_analytics',
+            'wrapper' => 'stat_google_analytics',
+            'method' => 'replace',
+            'effect' => 'fade',
+                        'event' => 'click',
+          ),
+        );
 
   return system_settings_form($form);
 } // function stat_admin()
@@ -79,13 +79,13 @@ function stat_google_analytics_start() {
     try {
       // construct the class
       $stat_google_analytics_link = new analytics($ga_name,$ga_pass);
-      
-			if($ga_id == '') {
-				// grab info for the correct domain name on the account.
-	      $aProfiles = $stat_google_analytics_link->getProfileList();
-	      $ga_profile = $ga_profile ? $ga_profile : preg_replace('`^www.`', '', $_SERVER['HTTP_HOST']);
-	      $ga_id = array_search($ga_profile,$aProfiles);
-			}
+
+                        if($ga_id == '') {
+                                // grab info for the correct domain name on the account.
+              $aProfiles = $stat_google_analytics_link->getProfileList();
+              $ga_profile = $ga_profile ? $ga_profile : preg_replace('`^www.`', '', $_SERVER['HTTP_HOST']);
+              $ga_id = array_search($ga_profile,$aProfiles);
+                        }
 
       if($ga_id == '' && $domain != 'default') {
         drupal_set_message(t('Could not locate this domains profile in the Google Analytics account'),'warn');
@@ -103,87 +103,87 @@ function stat_google_analytics_start() {
       // or $stat_google_analytics_link->setDateRange('YYYY-MM-DD', 'YYYY-MM-DD');
       $stat_google_analytics_link = $stat_google_analytics_link;
     } catch (Exception $e) {
-			$message_explode = explode(')',$e->getMessage());
-      drupal_set_message('Google Analytics API: ' . $message_explode[0].')','error'); 
+                        $message_explode = explode(')',$e->getMessage());
+      drupal_set_message('Google Analytics API: ' . $message_explode[0].')','error');
     }
   }
-  
+
   return true;
 } // stat_google_analytics_init()
 
 /**
- * Implementation of hook_form_alter().
- */
+    * Implementation of hook_form_alter().
+    */
 function stat_google_analytics_form_alter(&$form, $form_state, $form_id) {
-	global $user, $stat_google_analytics_link;
-	
+        global $user, $stat_google_analytics_link;
+
 
   switch ($form_id) {
-    case 'stat_admin':
+    case 'stat_ui_admin':
 
-		  $form['google_analytics'] = array(
-	      '#type' => 'fieldset', 
-	      '#title' => t('Google Analytics'),
-				'#attributes' => array('id'=>'stat_google_analytics'),
-				'#attached' => array(
-			    'js' => array(
-	          'vertical-tabs' => drupal_get_path('module', 'stat_google_analytics') . '/js/stat_google_analytics_admin.js',
-	        ),
-	      ),
-	    );
+                  $form['google_analytics'] = array(
+              '#type' => 'fieldset',
+              '#title' => t('Google Analytics'),
+                                '#attributes' => array('id'=>'stat_google_analytics'),
+                                '#attached' => array(
+                            'js' => array(
+                  'vertical-tabs' => drupal_get_path('module', 'stat_google_analytics') . '/js/stat_google_analytics_admin.js',
+                ),
+              ),
+            );
 
-			stat_google_analytics_start();
-			if($stat_google_analytics_link) {
-				$options = $stat_google_analytics_link->getProfileList();
-				asort($options);
-				$form['google_analytics']['stat_google_analytics_profile_id'] = array(
-			      '#type' => 'select',
-			      '#title' => t('Profile Name'),
-			      '#default_value' => variable_get('stat_google_analytics_profile_id',''),
-						'#options' => $options,
-			  );
-			}
-			else {
-				$form['google_analytics']['stat_google_analytics_name'] = array(
-		      '#type' => 'textfield',
-		      '#title' => t('Name'),
-		      '#default_value' => variable_get('stat_google_analytics_name',''),
-		      '#size' => 15,
-		      '#maxlength' => 64,
-		      '#required' => TRUE,
-		    );
-		    $form['google_analytics']['stat_google_analytics_password'] = array(
-		      '#type' => 'password',
-		      '#title' => t('Password'),
-		      '#default_value' => variable_get('stat_google_analytics_password',''),
-		      '#size' => 15,
-		      '#maxlength' => 64,
-		      '#required' => TRUE,
-		    );
+                        stat_google_analytics_start();
+                        if($stat_google_analytics_link) {
+                                $options = $stat_google_analytics_link->getProfileList();
+                                asort($options);
+                                $form['google_analytics']['stat_google_analytics_profile_id'] = array(
+                              '#type' => 'select',
+                              '#title' => t('Profile'),
+                              '#default_value' => variable_get('stat_google_analytics_profile_id',''),
+                                                '#options' => $options,
+                          );
+                        }
+                        else {
+                                $form['google_analytics']['stat_google_analytics_name'] = array(
+                      '#type' => 'textfield',
+                      '#title' => t('Name'),
+                      '#default_value' => variable_get('stat_google_analytics_name',''),
+                      '#size' => 15,
+                      '#maxlength' => 64,
+                      '#required' => TRUE,
+                    );
+                    $form['google_analytics']['stat_google_analytics_password'] = array(
+                      '#type' => 'password',
+                      '#title' => t('Password'),
+                      '#default_value' => variable_get('stat_google_analytics_password',''),
+                      '#size' => 15,
+                      '#maxlength' => 64,
+                      '#required' => TRUE,
+                    );
 
-				$form['google_analytics']['login'] = array(
-					'#type' => 'submit',
-					'#value' => t('Login'),
-					'#ahah' => array(
-				  	'path' => 'admin/settings/stat/stat_google_analytics',
-				    'wrapper' => 'stat_google_analytics',
-				    'method' => 'replace',
-				    'effect' => 'fade',
-						'event' => 'click',
-				  ),
-				);
-			}
-   	
+                                $form['google_analytics']['login'] = array(
+                                        '#type' => 'submit',
+                                        '#value' => t('Login'),
+                                        '#ahah' => array(
+                                        'path' => 'admin/settings/stat/stat_google_analytics',
+                                    'wrapper' => 'stat_google_analytics',
+                                    'method' => 'replace',
+                                    'effect' => 'fade',
+                                                'event' => 'click',
+                                  ),
+                                );
+                        }
+
     break;
   }
 }
 
 function stat_google_analytics_admin_ahaha() {
-	global $stat_google_analytics_link;
-	
-	stat_google_analytics_start();
-	
-	$form_state = array('storage' => NULL, 'submitted' => FALSE);
+        global $stat_google_analytics_link;
+
+        stat_google_analytics_start();
+
+        $form_state = array('storage' => NULL, 'submitted' => FALSE);
   $form_build_id = $_POST['form_build_id'];
   // Get the form from the cache.
   $form = form_get_cache($form_build_id, $form_state);
@@ -203,12 +203,12 @@ function stat_google_analytics_admin_ahaha() {
   $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
   // Render the new output.
 
-	//drupal_set_message(print_r($form_state['post'],true));
-	if($form_state['post']['op'] == t('Change Login')) {
-		unset($form['google_analytics']['stat_google_analytics_profile_id']);
-		unset($form['google_analytics']['change_login']);
-	
-		$form['google_analytics']['stat_google_analytics_name'] = array(
+        //drupal_set_message(print_r($form_state['post'],true));
+        if($form_state['post']['op'] == t('Change Login')) {
+                unset($form['google_analytics']['stat_google_analytics_profile_id']);
+                unset($form['google_analytics']['change_login']);
+
+                $form['google_analytics']['stat_google_analytics_name'] = array(
       '#type' => 'textfield',
       '#title' => t('Name'),
       '#default_value' => variable_get('stat_google_analytics_name',''),
@@ -225,52 +225,89 @@ function stat_google_analytics_admin_ahaha() {
       '#required' => TRUE,
     );
 
-		$form['google_analytics']['login'] = array(
-			'#type' => 'submit',
-			'#value' => t('Login'),
-			'#ahah' => array(
-		  	'path' => 'admin/settings/stat/stat_google_analytics',
-		    'wrapper' => 'stat_google_analytics',
-		    'method' => 'replace',
-		    'effect' => 'fade',
-				'event' => 'click',
-		  ),
-		);
-	}
-	else {
-		unset($form['google_analytics']['stat_google_analytics_name']);
-	  unset($form['google_analytics']['stat_google_analytics_password']);
+                $form['google_analytics']['login'] = array(
+                        '#type' => 'submit',
+                        '#value' => t('Login'),
+                        '#ahah' => array(
+                        'path' => 'admin/settings/stat/stat_google_analytics',
+                    'wrapper' => 'stat_google_analytics',
+                    'method' => 'replace',
+                    'effect' => 'fade',
+                                'event' => 'click',
+                  ),
+                );
+        }
+        else {
+                unset($form['google_analytics']['stat_google_analytics_name']);
+          unset($form['google_analytics']['stat_google_analytics_password']);
 
-		//drupal_set_message(print_r($stat_google_analytics_link->getProfileList(),true));
-		$form['google_analytics']['stat_google_analytics_profile_id'] = array(
-	      '#type' => 'select',
-	      '#title' => t('Profile Name'),
-	      '#default_value' => variable_get('stat_google_analytics_profile_id',''),
-				'#options' => asort($stat_google_analytics_link->getProfileList()),
-	  );
-	}
-	
-	
-	$form = $form['google_analytics'];
-	unset($form['#prefix'], $form['#suffix']); // Prevent duplicate wrappers.
+                //drupal_set_message(print_r($stat_google_analytics_link->getProfileList(),true));
+                $form['google_analytics']['stat_google_analytics_profile_id'] = array(
+              '#type' => 'select',
+              '#title' => t('Profile Name'),
+              '#default_value' => variable_get('stat_google_analytics_profile_id',''),
+                                '#options' => asort($stat_google_analytics_link->getProfileList()),
+          );
+        }
+
+
+        $form = $form['google_analytics'];
+        unset($form['#prefix'], $form['#suffix']); // Prevent duplicate wrappers.
   $output = theme('status_messages') . drupal_render($form);
 
-	drupal_json(array('status' => TRUE, 'data' => $output));
+        drupal_json(array('status' => TRUE, 'data' => $output));
 }
 
-function stat_google_analytics_stat_provider() {
-  stat_google_analytics_start();
+/**
+    * Notify CTools that we'll be using the plugin API with Context module
+    */
+function stat_google_analytics_ctools_plugin_api($module, $api) {
+  if ($module == 'stat' && $api == 'plugins') {
+    return array('version' => 3);
+  }
+}
+
+/**
+    * CTools plugin API hook for Context
+    */
+function stat_google_analytics_stat_plugins() {
+  $plugins = array();
+  $plugins['stat_google_analytics'] = array(
+    'handler' => array(
+      'path' => drupal_get_path('module', 'stat_google_analytics') .'/plugins',
+      'file' => 'stat_google_analytics.inc',
+      'class' => 'stat_google_analytics',
+      'parent' => 'stat_source',
+    ),
+  );
+
+  return $plugins;
+}
+
+function stat_google_analytics_stat_registry() {
+        return array(
+    'sources' => array(
+      'stat_google_analytics' => array(
+        'title' => t('Google Analytics'),
+        'plugin' => 'stat_google_analytics',
+      ),
+    ),
+  );
+}
+
+function unknown_func() {
+
 
   // make sure we have the tools to get google statistics
   if(require_once(drupal_get_path('module', 'stat_google_analytics').'/analytics.class.php')) {
-    $provider['stat_google_analytics'] = array(
+    $source['stat_google_analytics'] = array(
         '#title' => t('Google Analytics'),
         '#description' => t('Statistics pulled live from googles servers'),
         '#categories' => TRUE,
         '#sub-categories' => TRUE,
       );
-    
-    $provider['stat_google_analytics']['metrics'] = array(
+
+    $source['stat_google_analytics']['metrics'] = array(
       '#title' => t('Metrics'),
       'visitor' => array(
         '#title' => t('M1. Visitor'),
@@ -288,14 +325,14 @@ function stat_google_analytics_stat_provider() {
         ),
       ),
     );
-    
-    return $provider;
+
+    return $source;
   }
-} // function stat_google_analytics_stat_provider()
+} // function stat_google_analytics_stat_source()
 
 function stat_google_analytics_stat_visitors($start_date,$end_date) {
   global $stat_google_analytics_link;
-  
+
   // set the date range
   $stat_google_analytics_link->setDateRange(date('Y\-m\-d',$start_date),date('Y\-m\-d',$end_date));
 
@@ -308,7 +345,7 @@ function stat_google_analytics_stat_visitors($start_date,$end_date) {
 
 function stat_google_analytics_stat_visits($start_date,$end_date) {
   global $stat_google_analytics_link;
-  
+
   // set the date range
   $stat_google_analytics_link->setDateRange(date('Y\-m\-d',$start_date),date('Y\-m\-d',$end_date));
   $points = $stat_google_analytics_link->getData(array('dimensions'=>'ga:date',
@@ -327,3 +364,4 @@ function get_stat_google_analytics_points($ga_points, $label) {
   $points->label = $label;
   return $points;
 }
+

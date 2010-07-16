@@ -2,260 +2,110 @@
 // $Id$
 
 /**
-* @return array An array of valid permissions for the stat module
-*/
-function stat_perm() {
-  return array('administer stats settings','view stats');
-} // function stat_perm()
+ * Implementation of hook_ctools_plugin_api().
+ */
+function stat_ctools_plugin_api($module, $api) {
+  if ($module == 'stat' && $api == 'plugins') {
+    return array('version' => 3);
+  }
+}
 
-function stat_menu() {
-
-  $items = array();
-
-  $items['admin/settings/stat'] = array(
-    'title' => 'Analytic Statistics Settings',
-    'description' => 'Configure the settings used to generate statistics for your website',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('stat_admin'),
-    'access arguments' => array('access administration pages'),
-    'type' => MENU_NORMAL_ITEM,
-   );
-
-	$items['admin/settings/stat/overview'] = array(
-	  'title' => 'Overview',
-    'page callback' => 'drupal_get_form',
-	  'page arguments' => array('stat_admin'),
-	  'access arguments' => array('administer stats settings'),
-	  'type' => MENU_DEFAULT_LOCAL_TASK,
-		'weight' => -1,
-	 );
-
-	$items['admin/reports/stat'] = array(
-    'title' => 'Analytic Statistics',
-    'description' => 'Analytics Statistics for your website',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('stat_report'),
-    'access arguments' => TRUE,
-    'type' => MENU_NORMAL_ITEM,
-   );
-
-  return $items;
-} // function stat_menu()
-
-function stat_admin() {
-  $form = array();
-	$form['#pre_render'][] = 'vertical_tabs_form_pre_render';
-  return system_settings_form($form);
-} // function stat_admin()
-
-function stat_report($form_state) {
-	global $_domain;
-	
-  $form = array();
-	
-	$stat_providers = module_invoke_all('stat_provider');
-	drupal_add_js(drupal_get_path('module', 'stat') . '/js/jquery.sparkline.min.js');
-	
-	if(!is_array($stat_providers)) {
-		drupal_set_message(t('No statistic providers are enabled.'));
-		return $form;
-	}
-	
-	$form['filters']= array(
-		'#type' => 'fieldset',
-		'#title' => t('Filters'),
-		'#tree' => TRUE,
-		'#prefix' => '<div id="stat-filters">',
-		'#suffix' => '</div>',
-	);
-	
-	
-	foreach($stat_providers as $module => $info) {
-		if($info['#categories'] === TRUE && $info['#sub-categories'] === TRUE) { // two levels of catigories
-			$form['filters'][$module] = array(
-				'#type' => 'fieldset',
-				'#title' => $info['#title'],
-				'#tree' => TRUE,
-				'#collapsible' => TRUE,
-				'#description' => $info['#description'],
-			);
-			$selected = array();
-			foreach($info as $cat => $data) {
-				if($cat[0] != '#') {
-					foreach($data as $subcat => $info2) {
-						if($subcat[0] != '#') {
-								foreach($info2 as $key => $info3) {
-									if($key[0] != '#') {
-										$filter_options[$info2['#title']][$info3['callback']] = t($info3['title']);
-										if($_SESSION['stat_report']['filter'][$info3['callback']]) $selected[] = $info3['callback'];
-									}
-								}
-						}
-					}
-					$form['filters'][$module][$cat] = array(
-					  '#type' => 'select', 
-					  '#title' => t($data['#title']),
-					  '#multiple' => TRUE,
-						'#size' => 5,
-					  '#options' => $filter_options,
-					);
-					if($selected) {
-						//$selected_string  = implode(',',$selected);
-						$form['filters'][$module][$cat]['#default_value'] = $selected;
-					}
-				}
-			}
-		}
-		else if ($info['#categories'] === TRUE) { // one level of catigories
-			foreach($info as $cat => $data) {
-				if($cat[0] != '#') {
-						foreach($data as $subcat => $info2) {
-							if($subcat[0] != '#') {
-								$filter_options[$info2['callback']] = $info2['title'];
-							}
-						}
-				}
-			}
-			$form['filters'][$module]['title'] = array(
-				'#value' => '<h4>'.$info['#title'].'</h4>',
-			);
-			$form['filters'][$module][$cat] = array(
-			  '#type' => 'select', 
-			  '#title' => t($data['#title']),
-			  '#multiple' => TRUE,
-				'#size' => 5,
-			  '#options' => $filter_options,
-			);
-		}
-		else { // no catigories
-			$form['filters'][$module] = array(
-				'#type' => 'fieldset',
-				'#title' => $info['#title'],
-				'#tree' => TRUE,
-				'#collapsible' => TRUE,
-				'#description' => $info['#description'],
-			);
-			
-			foreach($info['items'] as $plugin => $plug_info) {
-				$form['filters'][$module][$plug_info['callback']] = array(
-					'#type' => 'checkbox', 
-					'#title' => t($plug_info['title']),
-				);
-				if($_SESSION['stat_report']['filter'][$plug_info['callback']]) {
-					$form['filters'][$module][$plug_info['callback']]['#attributes'] = array('checked' => 'checked');
-				}
-			}
-		}
-		$form['filters']['submit'] = array(
-			'#type' => 'submit',
-			'#value' => t('Filter'),
-			'#weight' => 100,
-		);
-	}
-	
-	$start_date = $_SESSION['stat_report']['datepicker']['stat_datepicker_start'];
-	$end_date = $_SESSION['stat_report']['datepicker']['stat_datepicker_end'];
-	$start_date = $start_date ? $start_date : strtotime("-1 month");
-	$end_date = $end_date ? $end_date : time();
-	
-	if(is_array($_SESSION['stat_report']['filter'])) { // seems to call this whole function twice
-		foreach($_SESSION['stat_report']['filter'] as $callback) {
-			//drupal_set_message($callback);
-			$points[] = $callback($start_date,$end_date);
-		}
-	}
-	//drupal_set_message(print_r($points2,true));
-	
-	// date range picker
-	jquery_ui_add('ui.datepicker');
-	drupal_add_js(drupal_get_path('module','stat') . '/js/stat.js');
-	drupal_add_css(drupal_get_path('module','stat') . '/stat.css');
-	
-	$form['date_range'] = array(
-    '#type' => 'fieldset', 
-    '#title' => t('Date Range'),
-		'#prefix' => '<div id="stat-date">',
-		'#suffix' => '</div><div class="clear-block"></div>',
+/**
+ * Implementation of hook_ctools_plugin_plugins().
+ */
+function stat_ctools_plugin_plugins() {
+  return array(
+    'cache' => TRUE,
+    'use hooks' => TRUE,
   );
+}
 
-	$form['date_range']['stat_datepicker_start'] = array(
-		'#type' => 'textfield', 
-		'#title' => t('Start Date'), 
-		'#default_value' => date('m/d/Y',$start_date), 
-		'#size' => 10,
-		'#prefix' => '<div style="float: left; margin-right: 15px;">',
-		'#suffix' => '</div>',
-	);
+/**
+ * Implementation of hook_context_plugins().
+ *
+ * This is a ctools plugins hook.
+ */
+function stat_stat_plugins() {
+  module_load_include('inc', 'stat', 'stat.plugins');
+  return _stat_stat_plugins();
+}
 
-	$form['date_range']['stat_datepicker_end'] = array(
-		'#type' => 'textfield', 
-		'#title' => t('End Date'), 
-		'#default_value' => date('m/d/Y',$end_date), 
-		'#size' => 10,
-		'#prefix' => '<div style="float: left;">',
-		'#suffix' => '</div>',
-	);
 
-	$form['date_range']['datepicker_submit'] = array(
-		'#type' => 'submit',
-		'#value' => t('Set Date Range'),
-		'#prefix' => '<div style="clear: both;">',
-		'#suffix' => '</div>',
-	);
+/**
+ * Get a plugin handler.
+ */
+function stat_get_plugin($type = 'source', $key, $reset = FALSE) {
+  static $cache = array();
+  if (!isset($cache[$type][$key]) || $reset) {
+    switch ($type) {
+      case 'source':
+        $registry = stat_sources();
+        break;
+      case 'displays': // this is unknown/unimplimented... we have different sources but not different displays.
+        $registry = stat_displays();
+        break;
+    }
+    if (isset($registry[$key], $registry[$key]['plugin'])) {
+      ctools_include('plugins');
+      $info = $registry[$key];
+      $plugins = ctools_get_plugins('stat', 'plugins');
+      if (isset($plugins[$info['plugin']]) && $class = ctools_plugin_get_class($plugins[$info['plugin']], 'handler')) {
+        $cache[$type][$key] = new $class($key, $info);
+      }
+    }
+  }
+  return isset($cache[$type][$key]) ? $cache[$type][$key] : FALSE;
+}
 
-	$form['graphs'] = array(
-    '#type' => 'fieldset', 
-    '#title' => t('Graphs'),
-  );
 
-	$options = array(
-		'lines' => array('show' => TRUE, 'fill' => TRUE),
-		'points' => array('show' => TRUE),
-		'grid' => array('hoverable' => TRUE, 'clickable' => TRUE),
-		'xaxis' => array('mode'=> 'time'),
-		'legend' => array('position' => 'nw', 'noColumns' => 2)
-	);
-  $form['graphs']['clicks_per_hour'] = array('#type' => 'markup', '#value' => '<div style="position: relative;">'.theme('flot_graph', $element, $points,$options).'</div><p id="hoverdata">Mouse hovers at
-	    (<span id="x">0</span>, <span id="y">0</span>). <span id="clickdata"></span></p><p><input id="enableTooltip" type="checkbox">Enable tooltip</p>');
+/**
+ * Wrapper around cache_get() to make it easier for stat to pull different
+ * datastores from a single cache row.
+ */
+function stat_cache_get($key, $reset = FALSE) {
+  static $cache;
+  if (!isset($cache) || $reset) {
+    $cache = cache_get('stat', 'cache');
+    $cache = $cache ? $cache->data : array();
+  }
+  return !empty($cache[$key]) ? $cache[$key] : FALSE;
+}
 
-  return $form;
-} // function stat_report()
+/**
+ * Wrapper around cache_set() to make it easier for stat to write different
+ * datastores to a single cache row.
+ */
+function stat_cache_set($key, $value) {
+  $cache = cache_get('stat', 'cache');
+  $cache = $cache ? $cache->data : array();
+  $cache[$key] = $value;
+  cache_set('stat', $cache);
+}
 
-function stat_report_submit($form, &$form_state) {
-	switch($form_state['clicked_button']['#value']) {
-		case t('Set Date Range') :
-			unset($_SESSION['stat_report']['datepicker']);
-			$start_date_explode = explode('/',$form_state['clicked_button']['#post']['stat_datepicker_start']);
-			$start_date = mktime(0,0,0,$start_date_explode[0],$start_date_explode[1],$start_date_explode[2]);
-			$end_date_explode = explode('/',$form_state['clicked_button']['#post']['stat_datepicker_end']);
-			$end_date = mktime(0,0,0,$end_date_explode[0],$end_date_explode[1],$end_date_explode[2]);
-			
-			$_SESSION['stat_report']['datepicker']['stat_datepicker_start'] = $start_date;
-			$_SESSION['stat_report']['datepicker']['stat_datepicker_end'] = $end_date;
-			break;
-		case t('Filter') :
-			unset($_SESSION['stat_report']['filter']);
-			if(is_array($form_state['clicked_button']['#post']['filters'])) {
-				foreach($form_state['clicked_button']['#post']['filters'] as $module => $data) {
-					if(is_array($data)) {
-						foreach($data as $cat => $data2) {
-							if(is_array($data2)) {
-								foreach($data2 as $sub_cat => $data3) {
-									//drupal_set_message('Level 3: '.$data3);
-									$_SESSION['stat_report']['filter'][$data3] = $data3;
-								}
-							}
-							else {
-								$_SESSION['stat_report']['filter'][$cat] = $cat;
-								//drupal_set_message('Level 2: '.$data2.'#'.$cat);
-							}
-						}
-					}	
-					else {
-						drupal_set_message('Level 1: '.$data);
-					}
-				}
-			}
-			break;
-	}
-} // function stat_report_submit()
+/**
+ * Get all context reactions.
+ */
+function stat_sources($reset = FALSE) {
+  return _stat_registry('sources', $reset);
+}
+
+/**
+ * Retrieves & caches the context registry.
+ */
+function _stat_registry($key = NULL, $reset = FALSE) {
+  static $registry;
+  if (!isset($registry) || $reset) {
+    if (!$reset && $cache = stat_cache_get('registry')) {
+      $registry = $cache;
+    }
+    else {
+      $registry = module_invoke_all('stat_registry');
+      drupal_alter('stat_registry', $registry);
+      stat_cache_set('registry', $registry);
+    }
+  }
+  if (isset($key)) {
+    return isset($registry[$key]) ? $registry[$key] : array();
+  }
+  return $registry;
+}

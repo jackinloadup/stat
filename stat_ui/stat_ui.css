@@ -1,0 +1,174 @@
+/**
+ * Editor =============================================================
+ */
+div.stat-editor div.label { float:left; }
+div.stat-editor div.links { float:right; }
+
+div.stat-editor div.stat-editable { display:none; }
+div.stat-editor div.links a.done { display:none; }
+div.stat-editor li.stat-editing a.edit { display:none; }
+div.stat-editor li.stat-editing a.done { display:block; }
+
+/* Don't display form submission buttons initially or when editing */
+body.stat-editing div.stat-editor div.links { display:none; }
+body.stat-editing div.stat-editor li.stat-editing div.links { display:block; }
+
+div.stat-editor div.buttons { display:none; }
+form.edited div.stat-editor div.buttons { display:block; }
+body.stat-editing form.edited div.stat-editor div.buttons { display:none; }
+
+/**
+ * Styles for visual integration with admin.
+ */
+#admin-toolbar div.stat-editor div.links a:hover {
+  background:#eee;
+  color:#000;
+  }
+
+#admin-toolbar div.stat-editor div.links a {
+  float:left;
+
+  padding:0px 10px;
+  margin-right:5px;
+
+  background:#222;
+  font-size:11px;
+  -moz-border-radius:10px;
+  -webkit-border-radius:10px;
+  }
+
+div.stat-editor div.stat-editable { padding:5px 0px; }
+
+#admin-toolbar div.stat-editor div.buttons {
+  padding:10px 0px;
+  text-align:center;
+  background:#111;
+  }
+
+/**
+ * Horizontal
+ */
+#admin-toolbar.horizontal form.edited div.stat-editor div.buttons,
+#admin-toolbar.horizontal div.stat-editor div.item-list {
+  float:left;
+  clear:left;
+  width:30%;
+  }
+
+#admin-toolbar.horizontal div.stat-editor div.stats {
+  width:69.9%;
+  float:right;
+  }
+
+#admin-toolbar.horizontal div.stat-editor div.stat-editable { padding-left:20px }
+
+/**
+ * Admin listing page =================================================
+ */
+table.stat-admin td.stat-name {
+  width:75%;
+  padding-left:20px;
+  }
+
+table.stat-admin td.tag { font-style:italic; }
+
+table.stat-admin td.stat-links { white-space:nowrap; }
+
+table.stat-admin em.storage,
+table.stat-admin tr.disabled td.stat-name { color:#999; }
+
+table.stat-admin div.description {
+  padding-left:10px;
+  margin:0px;
+  }
+
+table.stat-admin input.form-text { width:90%; }
+
+/**
+ * stat form =======================================================
+ */
+.stat-plugins {
+  position:relative;
+  margin:0px 0px 10px;
+  }
+
+.stat-plugins .stat-plugin-info {
+  padding:10px 10px 9px;
+  border-bottom:1px solid #e8e8e8;
+  }
+
+.stat-plugins .stat-plugin-info div.description {
+  margin:0px 0px 10px;
+  padding:0px;
+  }
+
+.stat-plugins .stat-plugin-selector {
+  width:25%;
+  background:#fff;
+  }
+
+  .stat-plugins .stat-plugin-list .disabled { display:none; }
+
+  .stat-plugins .stat-plugin-list ul {
+    margin:0px;
+    padding:0px;
+    }
+
+  .stat-plugins .stat-plugin-list li {
+    list-style:none;
+    list-style-image:none;
+    background:transparent;
+
+    padding:0px;
+    margin:0px;
+    border:0px;
+    }
+
+  .stat-plugins .stat-plugin-list li a {
+    display:block;
+    position:relative;
+    padding:5px 10px 4px;
+    border-bottom:1px solid #e8e8e8;
+    }
+
+  .stat-plugins .stat-plugin-list li a.active-form {
+    background:#f8f8f8;
+    color:#333;
+    font-weight:bold;
+    }
+
+  .stat-plugins .stat-plugin-list li span.remove {
+    display:none;
+    position:absolute;
+    top:5px;
+    right:10px;
+
+    font-size:9px;
+    font-weight:normal;
+
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+    padding:0px 5px;
+    background:#fff;
+    }
+
+    .stat-plugins .stat-plugin-list li a:hover span.remove { display:block; }
+
+.stat-plugins .stat-plugin-forms {
+  float:right;
+  width:75%;
+  background:#f8f8f8;
+  min-height:200px;
+  }
+
+  .stat-plugins .stat-plugin-forms .stat-plugin-form {
+    padding:10px;
+    display:none;
+    }
+
+  .stat-plugins .stat-plugin-forms .active-form { display:block; }
+
+  .stat-plugins .stat-plugin-form {
+    max-height:400px;
+    overflow:auto;
+    }
